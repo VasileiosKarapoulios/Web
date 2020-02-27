@@ -3,6 +3,9 @@ import database_helper
 import json
 import random
 import string
+from gevent.pywsgi import WSGIServer
+from geventwebsocket.handler import WebSocketHandler
+
 
 app = Flask(__name__)
 
@@ -53,9 +56,12 @@ def check_old_password(email=None,password=None):
     else:
         return '', 400
 
+
+
+
 @app.route('/users/check_if_user_signed_in/', methods=['GET'])
 def check_if_user_signed_in():
-    result = database_helper.check_if_user_signed_in()
+    result = database_helper.check_if_user_signed_in() #VASI->AN COUNT LOGGEDINUSERS > 0 -> AUTO LOG IN
     if result:
         return json.dumps({"success": "true", "message": "User is logged in!"}), 200
     else:
@@ -68,6 +74,9 @@ def get_logged_in_data():
         return json.dumps({"success": "true", "message": "User's data!", "data": result}), 200
     else:
         return json.dumps({"success": "false", "message": "Something went wrong!"}), 500
+
+
+
 
 @app.route('/users/sign_up/', methods=['POST'])
 def sign_up():
@@ -181,10 +190,31 @@ def post_message():
         return '', 400
 
 
+signed_in_users = dict()
+
+@app.route('/check')
+def check():
+    if request.environ.get('wsgi.websocket'):
+        ws = request.environ['wsgi.websocket']
+        msg = json.loads(ws.receive())
+        user = database_helper.get_user_data_by_token(msg['token'])['email']
+        signed_in_users[user] = ws
+        while not ws.closed:
+            msg = ws.receive()
+            if msg != None:
+                msg = json.loads(msg)
+                msg = {'message': 'Logged.'}
+                ws.send(json.dumps(msg))
+    return 'None'
+
+
 @app.teardown_request
 def after_request(exception):
     database_helper.disconnect_db()
 
 
 if __name__ == '__main__':
-    app.run()
+     http_server = WSGIServer(('127.0.0.1',5000), app, handler_class=WebSocketHandler)
+     http_server.serve_forever()
+
+    #app.run()

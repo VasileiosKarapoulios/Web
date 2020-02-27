@@ -1,40 +1,30 @@
 window.onload = function(){    /////DONE
   //code that is executed as the page is loaded.
-  try{
-    var req = new XMLHttpRequest();
-    req.open("GET", "/users/check_if_user_signed_in/", true);
-    req.setRequestHeader("Content-type", "application/json");
-    req.onreadystatechange = function(){
-      if (this.readyState == 4){
-        if (this.status == 200){
-          var response = JSON.parse(req.responseText);
-          console.log(response["success"]);
-          if(response["success"]){
-            displayView(isLoggedIn="true")
-          }else{
-            console.log("Something went wrong!")
-          }
-        }else if (this.status == 500){
-          displayView(isLoggedIn="false")
-        }
-      }
-    };
-    req.send(JSON.stringify())
-  }
-  catch(e){
-    console.error(e);
-  }
+  displayView();
 };
 
-displayView = function(isLoggedIn){    //////DONE
+displayView = function(){    //////DONE
   // the code required to display a view
+  token = sessionStorage.getItem("token")
   var welcome = document.getElementById("welcomeview").innerHTML;
   var profile = document.getElementById("profileview").innerHTML;
-  if (isLoggedIn == "false") {
+  if (token == null) {
     var display = welcome;
   }
   else {
     var display = profile;
+    var connection = new WebSocket('ws://127.0.0.1:5000/check');
+    connection.onopen = function(){
+        msg = {'token': sessionStorage.getItem('token')};
+        connection.send(JSON.stringify(msg));
+    };
+    connection.onmessage = function(e){
+    msg = JSON.parse(e.data)['message']
+        if(msg == 'Same user logged in.'){
+            sessionStorage.removeItem('token');
+            displayView();
+        }
+    };
   }
 
   document.getElementById("content").innerHTML = display;
@@ -69,17 +59,20 @@ var validSignInPassword = function(){   ///////DONE
   var message;
 
   if(password.length>4){
-	document.getElementById('signin_message').style.color = 'green';
-    message = "Satisfies the length condition!";
     flag = true;
   }
   else{
-	document.getElementById('signin_message').style.color = 'red';
+    document.getElementById('signin_message').style.color = 'red';
     message = "Needs to be at least 5 digits!";
+    document.getElementById("signin_message").innerHTML = message;
+    setTimeout(function() {
+    document.getElementById("signin_message").innerHTML = "";
+    }, 1000);
+
     flag = false;
   }
 
-  document.getElementById("signin_message").innerHTML = message;
+
   return flag;
 };
 
@@ -148,7 +141,7 @@ var signInMechanism = function(){   /////////DONE
           }else{
             console.log("Something went wrong!")
           }
-        }else if (this.status == 500){
+        }else if (this.status == 400){
           document.getElementById("signin_message").style.color = 'red';
           document.getElementById("signin_message").innerHTML = "Wrong username or password!";
         }
