@@ -201,6 +201,7 @@ def check():
                 msg = json.loads(msg)
                 msg = {'message': 'Successfully logged in'}
                 ws.send(json.dumps(msg))
+            database_helper.delete_loggedinuser(user)
     return 'None'
 
 
