@@ -31,6 +31,12 @@ def find_user(email=None):
 @app.route('/users/sign_in/', methods=['POST'])
 def sign_in():
     data = request.get_json()
+    if data['email'] in signed_in_users:
+        msg = {
+          'message': 'Logged in from another device'
+          }
+        resp = database_helper.delete_loggedinuser(data['email'])
+        signed_in_users[data['email']].send(json.dumps(msg))
     if 'email' in data and 'password' in data:
         user = find_user(data['email']).get_json()[0]
         if user['email'] is not None and user['password'] == data['password']:
@@ -56,16 +62,6 @@ def check_old_password(email=None,password=None):
     else:
         return '', 400
 
-
-
-
-@app.route('/users/check_if_user_signed_in/', methods=['GET'])
-def check_if_user_signed_in():
-    result = database_helper.check_if_user_signed_in() #VASI->AN COUNT LOGGEDINUSERS > 0 -> AUTO LOG IN
-    if result:
-        return json.dumps({"success": "true", "message": "User is logged in!"}), 200
-    else:
-        return json.dumps({"success": "false", "message": "Something went wrong!"}), 500
 
 @app.route('/users/get_logged_in_data/', methods=['GET'])
 def get_logged_in_data():
@@ -197,14 +193,13 @@ def check():
     if request.environ.get('wsgi.websocket'):
         ws = request.environ['wsgi.websocket']
         msg = json.loads(ws.receive())
-        user = database_helper.get_user_data_by_token(msg['token'])['email']
+        user = database_helper.get_user_data_by_token(msg['token'])[0]['email']
         signed_in_users[user] = ws
-        print(signed_in_users)
         while not ws.closed:
             msg = ws.receive()
             if msg != None:
                 msg = json.loads(msg)
-                msg = {'message': 'Logged.'}
+                msg = {'message': 'Successfully logged in'}
                 ws.send(json.dumps(msg))
     return 'None'
 

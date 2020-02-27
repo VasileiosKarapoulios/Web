@@ -49,16 +49,13 @@ def check_old_password(email,password):
     except:
         return False
 
-
-def check_if_user_signed_in():
-    cursor=get_db().execute('select count(*) from loggedinusers')
-    rows = cursor.fetchall()
-    cursor.close()
-    if rows[0][0] > 0:
+def delete_loggedinuser(email):
+    try:
+        get_db().execute('delete from loggedinusers where email like ?', [email])
+        get_db().commit()
         return True
-    else:
+    except:
         return False
-
 
 def get_logged_in_data():
 

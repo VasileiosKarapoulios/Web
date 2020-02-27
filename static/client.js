@@ -20,7 +20,7 @@ displayView = function(){    //////DONE
     };
     connection.onmessage = function(e){
     msg = JSON.parse(e.data)['message']
-        if(msg == 'Same user logged in.'){
+        if(msg == 'Logged in from another device'){
             sessionStorage.removeItem('token');
             displayView();
         }
@@ -173,8 +173,8 @@ var signOutMechanism = function(){     /////////DONE
                       var response = JSON.parse(req.responseText);
                       console.log(response);
                       if(response["success"]){
-                        //localStorage.setItem("isLoggedIn", false);
-                      	displayView(isLoggedIn="false");
+                        sessionStorage.removeItem("token");
+                      	displayView();
                       }else{
                         console.log("Something went wrong!")
                       }
@@ -229,7 +229,7 @@ var check_old_pass = function(){    //////DONE
     sreq.onreadystatechange = function(){
       if (this.readyState == 4){
         if (this.status == 200){
-          var resp = JSON.parse(sreq.responseText);
+          var resp = JSON.parse(sreq.responseText);    // <-----p.x afto mpainei input sto epomeno request sto header
           console.log(resp);
           console.log(resp["data"])
           if(resp["success"]){
@@ -238,7 +238,7 @@ var check_old_pass = function(){    //////DONE
                 var req = new XMLHttpRequest();
                 req.open("GET", "/users/get_user_data_by_token/", true);
                 req.setRequestHeader("Content-type", "application/json");
-                req.setRequestHeader("Token", resp['data']);
+                req.setRequestHeader("Token", resp['data']);   // <--------- Edw
                 req.onreadystatechange = function(){
                   if (this.readyState == 4){
                     if (this.status == 200){
