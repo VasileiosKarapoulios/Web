@@ -62,13 +62,6 @@ var validSignInPassword = function(){   ///////DONE
     flag = true;
   }
   else{
-    document.getElementById('signin_message').style.color = 'red';
-    message = "Needs to be at least 5 digits!";
-    document.getElementById("signin_message").innerHTML = message;
-    setTimeout(function() {
-    document.getElementById("signin_message").innerHTML = "";
-    }, 1000);
-
     flag = false;
   }
 
