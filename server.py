@@ -199,6 +199,7 @@ def check():
         msg = json.loads(ws.receive())
         user = database_helper.get_user_data_by_token(msg['token'])['email']
         signed_in_users[user] = ws
+        print(signed_in_users)
         while not ws.closed:
             msg = ws.receive()
             if msg != None:

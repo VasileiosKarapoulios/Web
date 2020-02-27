@@ -137,7 +137,8 @@ var signInMechanism = function(){   /////////DONE
           if(response["success"]){
             //localStorage.setItem("response", JSON.stringify(response));
             //localStorage.setItem("isLoggedIn", true);
-            displayView(isLoggedIn="true");
+            sessionStorage.setItem("token", response["token"]);
+            displayView();
           }else{
             console.log("Something went wrong!")
           }
