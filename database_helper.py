@@ -50,8 +50,9 @@ def check_old_password(email,password):
         return False
 
 def delete_loggedinuser(email):
+    print(email)
     try:
-        get_db().execute('delete from loggedinusers where email like ?', [email])
+        result = get_db().execute('delete from loggedinusers where email like ?', [email])
         get_db().commit()
         return True
     except:

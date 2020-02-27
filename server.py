@@ -186,6 +186,17 @@ def post_message():
         return '', 400
 
 
+@app.route('/users/delete_loggedinuser/', methods=['POST'])
+def delete_loggedinuser():
+    data = request.get_json()
+    print(data)
+    result = database_helper.delete_loggedinuser(data['email'])
+    print(result)
+    if result:
+        return json.dumps({"success": "true", "message": "Logged in user deleted!"}), 200
+    else:
+        return json.dumps({"success": "false", "message": "Logged in user could not be deleted!"}), 500
+
 signed_in_users = dict()
 
 @app.route('/check')
@@ -201,7 +212,6 @@ def check():
                 msg = json.loads(msg)
                 msg = {'message': 'Successfully logged in'}
                 ws.send(json.dumps(msg))
-            database_helper.delete_loggedinuser(user)
     return 'None'
 
 

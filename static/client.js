@@ -5,9 +5,37 @@ window.onload = function(){    /////DONE
 
 displayView = function(){    //////DONE
   // the code required to display a view
-  token = sessionStorage.getItem("token")
+  token = sessionStorage.getItem("token");
   var welcome = document.getElementById("welcomeview").innerHTML;
   var profile = document.getElementById("profileview").innerHTML;
+  if(sessionStorage.getItem("token")==null){
+      try{
+        var user = {
+          email: localStorage.getItem("email")//apo kapou email
+        };
+        var req = new XMLHttpRequest();
+        req.open("POST", "/users/delete_loggedinuser/", true);
+        req.setRequestHeader("Content-type", "application/json");
+        req.onreadystatechange = function(){
+          if (this.readyState == 4){
+            if (this.status == 200){
+              var response = JSON.parse(req.responseText);
+              console.log(response);
+              if(response["success"]){
+                localStorage.removeItem("email")
+              }else{
+                console.log("Something went wrong!")
+              }
+            }else if (this.status == 500){
+            }
+          }
+        };
+        req.send(JSON.stringify(user))
+      }
+      catch(e){
+        console.error(e);
+      }
+    }
   if (token == null) {
     var display = welcome;
   }
@@ -15,7 +43,7 @@ displayView = function(){    //////DONE
     var display = profile;
     var connection = new WebSocket('ws://127.0.0.1:5000/check');
     connection.onopen = function(){
-        msg = {'token': sessionStorage.getItem('token')};
+        msg = {'token': JSON.parse(sessionStorage.getItem("token"))};
         connection.send(JSON.stringify(msg));
     };
     connection.onmessage = function(e){
@@ -49,7 +77,7 @@ var check = function() {      /////////DONE
 		document.getElementById('signup_message').style.color = 'red';
 		document.getElementById('signup_message').innerHTML = "Password has to be at least 5 digits!";
 	}
-}
+};
 
 var validSignInPassword = function(){   ///////DONE
   // Validation of Password at SignIn
@@ -131,7 +159,8 @@ var signInMechanism = function(){   /////////DONE
 
             //localStorage.setItem("response", JSON.stringify(response));
             //localStorage.setItem("isLoggedIn", true);
-            sessionStorage.setItem("token", response["data"]);
+            sessionStorage.setItem("token", JSON.stringify(response["data"]));
+            localStorage.setItem("email", JSON.stringify(user["email"]));
             displayView();
           }else{
             console.log("Something went wrong!")
@@ -150,43 +179,20 @@ var signInMechanism = function(){   /////////DONE
 };
 
 var signOutMechanism = function(){     /////////DONE
-  ///sdfa
+    resp = JSON.parse(sessionStorage.getItem("token"));
     try{
-      var sreq = new XMLHttpRequest();
-      sreq.open("GET", "/users/get_logged_in_data/", true);
-      sreq.setRequestHeader("Content-type", "application/json");
-      sreq.onreadystatechange = function(){
+      var req = new XMLHttpRequest();
+      req.open("POST", "/users/sign_out/", true);
+      req.setRequestHeader("Content-type", "application/json");
+      req.setRequestHeader("Token", resp);
+      req.onreadystatechange = function(){
         if (this.readyState == 4){
           if (this.status == 200){
-            var resp = JSON.parse(sreq.responseText);
-            console.log(resp);
-            console.log(resp["data"])
-            if(resp["success"]){
-              try{
-                var req = new XMLHttpRequest();
-                req.open("POST", "/users/sign_out/", true);
-                req.setRequestHeader("Content-type", "application/json");
-                req.setRequestHeader("Token", resp["data"]);
-                req.onreadystatechange = function(){
-                  if (this.readyState == 4){
-                    if (this.status == 200){
-                      var response = JSON.parse(req.responseText);
-                      console.log(response);
-                      if(response["success"]){
-                        sessionStorage.removeItem("token");
-                      	displayView();
-                      }else{
-                        console.log("Something went wrong!")
-                      }
-                    }else if (this.status == 500){
-                      console.log("Something went wrong!")
-                    }
-                  }
-                };
-                req.send(JSON.stringify(resp["data"]))
-              }catch(e){
-                console.error(e);
-              }
+            var response = JSON.parse(req.responseText);
+            console.log(response);
+            if(response["success"]){
+              sessionStorage.removeItem("token");
+            	displayView();
             }else{
               console.log("Something went wrong!")
             }
@@ -195,11 +201,11 @@ var signOutMechanism = function(){     /////////DONE
           }
         }
       };
-      sreq.send(JSON.stringify())
+      req.send(JSON.stringify(resp["data"]))
     }catch(e){
-      console.error(e)
+      console.error(e);
     }
-}
+};
 
 openTab = function(e, tabID){       ////////DONE
   var i, tabcontent, tablinks;
@@ -216,96 +222,72 @@ openTab = function(e, tabID){       ////////DONE
 
   document.getElementById(tabID).style.display = "block";
   e.currentTarget.className += " active";
-}
+};
 
 //serverstub.signIn(serverstub.getUserDataByToken(response['data'])['data']['email'],serverstub.signIn(email, password))
 var check_old_pass = function(){    //////DONE
-  //response = JSON.parse(localStorage.getItem("response"));
+  resp = JSON.parse(sessionStorage.getItem("token"));
   //console.log(response['data'])
-  try{
-    var sreq = new XMLHttpRequest();
-    sreq.open("GET", "/users/get_logged_in_data/", true);
-    sreq.setRequestHeader("Content-type", "application/json");
-    sreq.onreadystatechange = function(){
-      if (this.readyState == 4){
-        if (this.status == 200){
-          var resp = JSON.parse(sreq.responseText);    // <-----p.x afto mpainei input sto epomeno request sto header
-          console.log(resp);
-          console.log(resp["data"])
-          if(resp["success"]){
-            if(document.getElementById('old_password').value.length>4){
+  if(document.getElementById('old_password').value.length>4){
+    try{
+      var req = new XMLHttpRequest();
+      req.open("GET", "/users/get_user_data_by_token/", true);
+      req.setRequestHeader("Content-type", "application/json");
+      req.setRequestHeader("Token", resp);
+      req.onreadystatechange = function(){
+        if (this.readyState == 4){
+          if (this.status == 200){
+            var loggedinuser = JSON.parse(req.responseText);
+            if(loggedinuser["success"]){
               try{
-                var req = new XMLHttpRequest();
-                req.open("GET", "/users/get_user_data_by_token/", true);
-                req.setRequestHeader("Content-type", "application/json");
-                req.setRequestHeader("Token", resp['data']);   // <--------- Edw
-                req.onreadystatechange = function(){
+                var sign_req = new XMLHttpRequest();
+                params = loggedinuser['data'][0]['email']+","+document.getElementById('old_password').value
+                sign_req.open("GET", "/users/check_old_password/"+ params, true);
+                sign_req.setRequestHeader("Content-type", "application/json");
+                sign_req.onreadystatechange = function(){
                   if (this.readyState == 4){
                     if (this.status == 200){
-                      var loggedinuser = JSON.parse(req.responseText);
-                      if(loggedinuser["success"]){
-                        try{
-                          var sign_req = new XMLHttpRequest();
-                          params = loggedinuser['data'][0]['email']+","+document.getElementById('old_password').value
-                          sign_req.open("GET", "/users/check_old_password/"+ params, true);
-                          sign_req.setRequestHeader("Content-type", "application/json");
-                          sign_req.onreadystatechange = function(){
-                            if (this.readyState == 4){
-                              if (this.status == 200){
-                                var sign_response = JSON.parse(sign_req.responseText);
-                                console.log(sign_response);
-                                if(sign_response["success"]){
-                                  document.getElementById('old_password_message').style.color = 'green';
-                              		document.getElementById('old_password_message').innerHTML = 'Old Password is correct';
-                                }
-                                else{
-                                  document.getElementById('old_password_message').style.color = 'red';
-                              		document.getElementById('old_password_message').innerHTML = 'Old Password is not correct';
-                                  console.log("Something went wrong");
-                                }
-                              }else if (this.status == 500){
-                                document.getElementById('old_password_message').style.color = 'red';
-                                document.getElementById('old_password_message').innerHTML = 'Old Password is not correct';
-                                console.log("Something went wrong");
-                              }
-                            }
-                          };
-                          sign_req.send(JSON.stringify());
-                        }
-                        catch(e){
-                          console.error(e);
-                        }
-                      }else{
+                      var sign_response = JSON.parse(sign_req.responseText);
+                      console.log(sign_response);
+                      if(sign_response["success"]){
+                        document.getElementById('old_password_message').style.color = 'green';
+                    		document.getElementById('old_password_message').innerHTML = 'Old Password is correct';
+                      }
+                      else{
+                        document.getElementById('old_password_message').style.color = 'red';
+                    		document.getElementById('old_password_message').innerHTML = 'Old Password is not correct';
                         console.log("Something went wrong");
                       }
                     }else if (this.status == 500){
-                      console.log("Something went wrong!");
+                      document.getElementById('old_password_message').style.color = 'red';
+                      document.getElementById('old_password_message').innerHTML = 'Old Password is not correct';
+                      console.log("Something went wrong");
                     }
                   }
                 };
-                req.send(JSON.stringify());
+                sign_req.send(JSON.stringify());
               }
               catch(e){
                 console.error(e);
               }
             }else{
-              document.getElementById('old_password_message').style.color = 'red';
-              document.getElementById('old_password_message').innerHTML = "Password needs to be at least 5 digits!";
+              console.log("Something went wrong");
             }
-          }else{
-          console.log("Something went wrong!")
+          }else if (this.status == 500){
+            console.log("Something went wrong!");
           }
-        }else if (this.status == 500){
-          console.log("Something went wrong!")
         }
-      }
-    };
-    sreq.send(JSON.stringify())
+      };
+      req.send(JSON.stringify());
+    }
+    catch(e){
+      console.error(e);
+    }
+  }else{
+    document.getElementById('old_password_message').style.color = 'red';
+    document.getElementById('old_password_message').innerHTML = "Password needs to be at least 5 digits!";
   }
-  catch(e){
-    console.error(e)
-  }
-}
+};
 
 var check_pass_change = function() {    /////DONE
 	if(document.getElementById('new_password').value.length>4){
@@ -327,576 +309,385 @@ var check_pass_change = function() {    /////DONE
 		document.getElementById('new_password_message').style.color = 'red';
 		document.getElementById('new_password_message').innerHTML = "Password needs to be at least 5 digits!";
 	}
-}
+};
 
 var changepassMechanism = function(){    /////DONE
-  //response = JSON.parse(localStorage.getItem("response"));
+  resp = JSON.parse(sessionStorage.getItem("token"));
+	if(document.getElementById('new_password').value.length>4){ //Apo katw esvisa ena temp, den 3erw an xreiazetai
+		if ((document.getElementById('new_password').value == document.getElementById('rep_new_password').value) && (document.getElementById('new_password').value != document.getElementById('old_password').value)){
+      var change_pass = {
+        oldpassword: document.getElementById('old_password').value,
+    		newpassword: document.getElementById('new_password').value
+  	  };
+      try{
+        var req = new XMLHttpRequest();
+        req.open("PUT", "/users/change_password/", true);
+        req.setRequestHeader("Content-type", "application/json");
+        req.setRequestHeader("Token", resp);
+        req.onreadystatechange = function(){
+          if (this.readyState == 4){
+            if (this.status == 200){
+              var response = JSON.parse(req.responseText);
+              console.log(response);
+              if(response["success"]){
+                var frm = document.getElementById('formChangePassword');
+          			frm.reset();
+          			document.getElementById('old_password_message').innerHTML = "Password changed!";
+          			document.getElementById('new_password_message').innerHTML = "";
+              }else{
+                console.log("Something went wrong!")
+              }
+            }else if (this.status == 500){
+              console.log("Something went wrong!")
+            }
+          }
+        };
+        console.log(change_pass)
+        req.send(JSON.stringify(change_pass))
+      }
+      catch(e){
+        console.error(e);
+      }
+		}
+	}
+};
+
+var searchMechanism = function(){ ////DONE
+  resp = JSON.parse(sessionStorage.getItem("token"));
+	if(document.getElementById('search_email').value!=""){
+    try{
+      var req = new XMLHttpRequest();
+      req.open("GET", "/users/get_user_data_by_email/" + document.getElementById('search_email').value, true);
+      req.setRequestHeader("Content-type", "application/json");
+      req.setRequestHeader("Token", resp);
+      req.onreadystatechange = function(){
+        if (this.readyState == 4){
+          if (this.status == 200){
+            var resp = JSON.parse(req.responseText);
+            console.log(resp["success"]);
+            if (resp["success"]){
+              document.getElementById('user_search_message').style.color = 'green';
+        			document.getElementById('user_search_message').innerHTML = resp['message'];
+        			fillUserDetailsOthers();
+        			displayPostsOthers();
+            }else{
+              document.getElementById('user_search_message').style.color = 'red';
+        			document.getElementById('user_search_message').innerHTML = resp['message'];
+            }
+            }else if (this.status == 500){
+              console.log("Something went wrong!")
+              document.getElementById('user_search_message').style.color = 'red';
+        			document.getElementById('user_search_message').innerHTML = resp['message'];
+            }
+          }
+        };
+        req.send(JSON.stringify());
+    }catch(e){
+      console.error(e);
+    }
+
+	}else{
+		document.getElementById('user_search_message').innerHTML = "";
+	}
+	//to resp exei mesa ta stoixeia
+};
+
+fillUserDetails = function(){  /////////DONE
+  response = JSON.parse(sessionStorage.getItem("token"));
+  console.log(response);
   try{
-    var sreq = new XMLHttpRequest();
-    sreq.open("GET", "/users/get_logged_in_data/", true);
-    sreq.setRequestHeader("Content-type", "application/json");
-    sreq.onreadystatechange = function(){
+    var req = new XMLHttpRequest();
+    req.open("GET", "/users/get_user_data_by_token/", true);
+    req.setRequestHeader("Content-type", "application/json");
+    req.setRequestHeader("Token", response);
+    req.onreadystatechange = function(){
       if (this.readyState == 4){
         if (this.status == 200){
-          var resp = JSON.parse(sreq.responseText);
-          console.log(resp);
-          console.log(resp["data"])
-          if(resp["success"]){
-          	if(document.getElementById('new_password').value.length>4){ //Apo katw esvisa ena temp, den 3erw an xreiazetai
-          		if ((document.getElementById('new_password').value == document.getElementById('rep_new_password').value) && (document.getElementById('new_password').value != document.getElementById('old_password').value)){
-                var change_pass = {
-                  oldpassword: document.getElementById('old_password').value,
-              		newpassword: document.getElementById('new_password').value
-            	  };
-                try{
-                  var req = new XMLHttpRequest();
-                  req.open("PUT", "/users/change_password/", true);
-                  req.setRequestHeader("Content-type", "application/json");
-                  req.setRequestHeader("Token", resp["data"]);
-                  req.onreadystatechange = function(){
-                    if (this.readyState == 4){
-                      if (this.status == 200){
-                        var response = JSON.parse(req.responseText);
-                        console.log(response);
-                        if(response["success"]){
-                          var frm = document.getElementById('formChangePassword');
-                    			frm.reset();
-                    			document.getElementById('old_password_message').innerHTML = "Password changed!";
-                    			document.getElementById('new_password_message').innerHTML = "";
-                        }else{
-                          console.log("Something went wrong!")
-                        }
-                      }else if (this.status == 500){
-                        console.log("Something went wrong!")
+          var loggedinuser = JSON.parse(req.responseText);
+          console.log(loggedinuser);
+          if(loggedinuser["success"]){
+            firstname = loggedinuser["data"][0]["firstname"];
+            familyname = loggedinuser["data"][0]["familyname"];
+            email = loggedinuser["data"][0]["email"];
+            gender = loggedinuser["data"][0]["gender"];
+            city = loggedinuser["data"][0]["city"];
+            country = loggedinuser["data"][0]["country"];
+            document.getElementById('right_first_name').innerHTML = firstname;
+            document.getElementById('right_family_name').innerHTML = familyname;
+            document.getElementById('right_email').innerHTML = email;
+            document.getElementById('right_gender').innerHTML = gender;
+            document.getElementById('right_city').innerHTML = city;
+            document.getElementById('right_country').innerHTML = country;
+          }else{
+            console.log("Something went wrong")
+          }
+        }else if (this.status == 500){
+          console.log("Something went wrong!")
+        }
+      }
+    };
+    req.send(JSON.stringify());
+  }
+  catch(e){
+    console.error(e);
+  }
+};
+
+postMessage = function(){    //////////DONE
+  response = JSON.parse(sessionStorage.getItem("token"));
+  try{
+      var req = new XMLHttpRequest();
+      req.open("GET", "/users/get_user_data_by_token/", true);
+      req.setRequestHeader("Content-type", "application/json");
+      req.setRequestHeader("Token", response);
+      req.onreadystatechange = function(){
+        if (this.readyState == 4){
+          if (this.status == 200){
+            var loggedinuser = JSON.parse(req.responseText);
+            console.log(loggedinuser);
+            if(loggedinuser["success"]){
+              var mess = {
+            		email: loggedinuser["data"][0]["email"],
+            		content: document.getElementById("post_text").value
+          	  };
+              try{
+                var post_req = new XMLHttpRequest();
+                post_req.open("POST", "/users/post_message/", true);
+                post_req.setRequestHeader("Content-type", "application/json");
+                post_req.setRequestHeader("Token", response['data']);
+                post_req.onreadystatechange = function(){
+                  if (this.readyState == 4){
+                    if (this.status == 200){
+                      var resp = JSON.parse(post_req.responseText);
+                      if(resp["success"]){
+                        console.log("Message posted")
+                        document.getElementById('post_message').style.color = 'green';
+                        post_message = resp["message"];
+                        displayPosts();
+                      }else{
+                        document.getElementById('post_message').style.color = 'red';
+                        post_message = "Message couldn't be posted";
                       }
+                      document.getElementById("post_message").innerHTML = post_message;
+	                    document.getElementById("post_text").value = "";
+                    }else if (this.status == 500){
+                      console.log("Something went wrong!")
+                      document.getElementById('post_message').style.color = 'red';
+                      post_message = "Message couldn't be posted";
                     }
+                  }
+                };
+                console.log(content)
+                console.log(email)
+                post_req.send(JSON.stringify(mess));
+              }
+              catch(e){
+                console.error(e);
+              }
+            }
+            else{
+              console.log("Something went wrong!")
+            }
+          }else if (this.status == 500){
+            console.log("Something went wrong!")
+          }
+        }
+      };
+      req.send(JSON.stringify());
+    }
+    catch(e){
+      console.error(e);
+    }
+};
+
+
+displayPosts = function(){  /////////DONE
+  response = JSON.parse(sessionStorage.getItem("token"));
+  try{
+    var req = new XMLHttpRequest();
+    req.open("GET", "/users/get_user_messages_by_token/", true);
+    req.setRequestHeader("Content-type", "application/json");
+    req.setRequestHeader("Token", response);
+    req.onreadystatechange = function(){
+      if (this.readyState == 4){
+        if (this.status == 200){
+          var userMessages = JSON.parse(req.responseText);
+          console.log(userMessages);
+          if(userMessages["success"]){
+            var i;
+            document.getElementById("wall_posts").innerHTML = "";
+            n = userMessages["data"]["length"];
+            console.log(n)
+            if(n>0){
+              for(i = 0; i < n; i++){
+                message = userMessages["data"][i]["content"];
+                document.getElementById("wall_posts").innerHTML +=
+                      "<p>".concat(message, "</p>");
+              }
+            }
+          }else{
+            console.log("Something went wrong!")
+          }
+        }
+      }else if (this.status == 500){
+        console.log("Something went wrong!")
+      }
+    };
+    req.send(JSON.stringify());
+  }
+  catch(e){
+    console.error(e);
+  }
+};
+
+refreshWall = function(){  ///////DONE
+	displayPosts();
+};
+
+refreshWallOthers = function(){ ////////DONE
+	displayPostsOthers();
+};
+
+postMessageToOthers = function(){  ///////DONE
+  response = JSON.parse(sessionStorage.getItem("token"));
+  try{
+      var req = new XMLHttpRequest();
+      req.open("GET", "/users/get_user_data_by_token/", true);
+      req.setRequestHeader("Content-type", "application/json");
+      req.setRequestHeader("Token", response);
+      req.onreadystatechange = function(){
+      if (this.readyState == 4){
+          if (this.status == 200){
+            var loggedinuser = JSON.parse(req.responseText);
+            console.log(loggedinuser);
+            if(loggedinuser["success"]){
+              var mess = {
+            		email: document.getElementById('search_email').value,
+            		content: document.getElementById("post_text_others").value
+          	  };
+              try{
+                var post_req = new XMLHttpRequest();
+                post_req.open("POST", "/users/post_message/", true);
+                post_req.setRequestHeader("Content-type", "application/json");
+                post_req.setRequestHeader("Token", response['data']);
+                post_req.onreadystatechange = function(){
+                if (this.readyState == 4){
+                    if (this.status == 200){
+                      var resp = JSON.parse(post_req.responseText);
+                      if(resp["success"]){
+                        console.log("Message posted")
+                        document.getElementById('post_message_others').style.color = 'green';
+                        post_message = resp["message"];
+                        displayPostsOthers();
+                      }
+                      else{
+                        document.getElementById('post_message_others').style.color = 'red';
+                        post_message = "Message couldn't be posted";
+                      }
+                      document.getElementById("post_message_others").innerHTML = post_message;
+	                    document.getElementById("post_text_others").value = "";
+                    }else if (this.status == 500){
+                      document.getElementById('post_message_others').style.color = 'red';
+                      post_message = "Message couldn't be posted";
+                    }
+                  }
                   };
-                  console.log(change_pass)
-                  req.send(JSON.stringify(change_pass))
+                  post_req.send(JSON.stringify(mess));
                 }
                 catch(e){
                   console.error(e);
                 }
-          		}
-          	}
-          }else{
-          console.log("Something went wrong!")
-          }
-        }else if (this.status == 500){
-          console.log("Something went wrong!")
-        }
-      }
-    };
-    sreq.send(JSON.stringify())
-  }
-  catch(e){
-    console.error(e)
-  }
-}
-
-var searchMechanism = function(){ ////DONE
-  //response = JSON.parse(localStorage.getItem("response"));
-  try{
-    var sreq = new XMLHttpRequest();
-    sreq.open("GET", "/users/get_logged_in_data/", true);
-    sreq.setRequestHeader("Content-type", "application/json");
-    sreq.onreadystatechange = function(){
-      if (this.readyState == 4){
-        if (this.status == 200){
-          var response = JSON.parse(sreq.responseText);
-          console.log(response);
-          console.log(response["data"])
-          if(response["success"]){
-          	if(document.getElementById('search_email').value!=""){
-              try{
-                var req = new XMLHttpRequest();
-                req.open("GET", "/users/get_user_data_by_email/" + document.getElementById('search_email').value, true);
-                req.setRequestHeader("Content-type", "application/json");
-                req.setRequestHeader("Token", response['data']);
-                req.onreadystatechange = function(){
-                  if (this.readyState == 4){
-                    if (this.status == 200){
-                      var resp = JSON.parse(req.responseText);
-                      console.log(resp["success"]);
-                      if (resp["success"]){
-                        document.getElementById('user_search_message').style.color = 'green';
-                  			document.getElementById('user_search_message').innerHTML = resp['message'];
-                  			fillUserDetailsOthers();
-                  			displayPostsOthers();
-                      }else{
-                        document.getElementById('user_search_message').style.color = 'red';
-                  			document.getElementById('user_search_message').innerHTML = resp['message'];
-                      }
-                      }else if (this.status == 500){
-                        console.log("Something went wrong!")
-                        document.getElementById('user_search_message').style.color = 'red';
-                  			document.getElementById('user_search_message').innerHTML = resp['message'];
-                      }
-                    }
-                  };
-                  req.send(JSON.stringify());
-              }catch(e){
-                console.error(e);
               }
-
-          	}else{
-          		document.getElementById('user_search_message').innerHTML = "";
-          	}
-          }else{
-          console.log("Something went wrong!")
-          }
-        }else if (this.status == 500){
-          console.log("Something went wrong!")
-        }
-      }
-    };
-    sreq.send(JSON.stringify())
-  }
-  catch(e){
-    console.error(e)
-  }
-	//to resp exei mesa ta stoixeia
-}
-
-fillUserDetails = function(){  /////////DONE
-  //response = JSON.parse(localStorage.getItem("response"));
-  try{
-    var sreq = new XMLHttpRequest();
-    sreq.open("GET", "/users/get_logged_in_data/", true);
-    sreq.setRequestHeader("Content-type", "application/json");
-    sreq.onreadystatechange = function(){
-      if (this.readyState == 4){
-        if (this.status == 200){
-          var response = JSON.parse(sreq.responseText);
-          console.log(response);
-          console.log(response["data"])
-          if(response["success"]){
-            try{
-              var req = new XMLHttpRequest();
-              req.open("GET", "/users/get_user_data_by_token/", true);
-              req.setRequestHeader("Content-type", "application/json");
-              req.setRequestHeader("Token", response['data']);
-              req.onreadystatechange = function(){
-                if (this.readyState == 4){
-                  if (this.status == 200){
-                    var loggedinuser = JSON.parse(req.responseText);
-                    console.log(loggedinuser);
-                    if(loggedinuser["success"]){
-                      firstname = loggedinuser["data"][0]["firstname"];
-                      familyname = loggedinuser["data"][0]["familyname"];
-                      email = loggedinuser["data"][0]["email"];
-                      gender = loggedinuser["data"][0]["gender"];
-                      city = loggedinuser["data"][0]["city"];
-                      country = loggedinuser["data"][0]["country"];
-                      document.getElementById('right_first_name').innerHTML = firstname;
-                      document.getElementById('right_family_name').innerHTML = familyname;
-                      document.getElementById('right_email').innerHTML = email;
-                      document.getElementById('right_gender').innerHTML = gender;
-                      document.getElementById('right_city').innerHTML = city;
-                      document.getElementById('right_country').innerHTML = country;
-                    }else{
-                      console.log("Something went wrong")
-                    }
-                  }else if (this.status == 500){
-                    console.log("Something went wrong!")
-                  }
-                }
-              };
-              req.send(JSON.stringify());
-            }
-            catch(e){
-              console.error(e);
-            }
-          }else{
-          console.log("Something went wrong!")
-          }
-        }else if (this.status == 500){
-          console.log("Something went wrong!")
-        }
-      }
-    };
-    sreq.send(JSON.stringify())
-  }
-  catch(e){
-    console.error(e)
-  }
-}
-
-postMessage = function(){    //////////DONE
-  //response = JSON.parse(localStorage.getItem("response"));
-  try{
-    var sreq = new XMLHttpRequest();
-    sreq.open("GET", "/users/get_logged_in_data/", true);
-    sreq.setRequestHeader("Content-type", "application/json");
-    sreq.onreadystatechange = function(){
-      if (this.readyState == 4){
-        if (this.status == 200){
-          var response = JSON.parse(sreq.responseText);
-          console.log(response);
-          console.log(response["data"])
-          if(response["success"]){
-            try{
-                var req = new XMLHttpRequest();
-                req.open("GET", "/users/get_user_data_by_token/", true);
-                req.setRequestHeader("Content-type", "application/json");
-                req.setRequestHeader("Token", response['data']);
-                req.onreadystatechange = function(){
-                  if (this.readyState == 4){
-                    if (this.status == 200){
-                      var loggedinuser = JSON.parse(req.responseText);
-                      console.log(loggedinuser);
-                      if(loggedinuser["success"]){
-                        var mess = {
-                      		email: loggedinuser["data"][0]["email"],
-                      		content: document.getElementById("post_text").value
-                    	  };
-                        try{
-                          var post_req = new XMLHttpRequest();
-                          post_req.open("POST", "/users/post_message/", true);
-                          post_req.setRequestHeader("Content-type", "application/json");
-                          post_req.setRequestHeader("Token", response['data']);
-                          post_req.onreadystatechange = function(){
-                            if (this.readyState == 4){
-                              if (this.status == 200){
-                                var resp = JSON.parse(post_req.responseText);
-                                if(resp["success"]){
-                                  console.log("Message posted")
-                                  document.getElementById('post_message').style.color = 'green';
-                                  post_message = resp["message"];
-                                  displayPosts();
-                                }else{
-                                  document.getElementById('post_message').style.color = 'red';
-                                  post_message = "Message couldn't be posted";
-                                }
-                                document.getElementById("post_message").innerHTML = post_message;
-          	                    document.getElementById("post_text").value = "";
-                              }else if (this.status == 500){
-                                console.log("Something went wrong!")
-                                document.getElementById('post_message').style.color = 'red';
-                                post_message = "Message couldn't be posted";
-                              }
-                            }
-                          };
-                          console.log(content)
-                          console.log(email)
-                          post_req.send(JSON.stringify(mess));
-                        }
-                        catch(e){
-                          console.error(e);
-                        }
-                      }
-                      else{
-                        console.log("Something went wrong!")
-                      }
-                    }else if (this.status == 500){
-                      console.log("Something went wrong!")
-                    }
-                  }
-                };
-                req.send(JSON.stringify());
+              else{
+                console.log("Something went wrong!")
               }
-              catch(e){
-                console.error(e);
-              }
-            }else{
-            console.log("Something went wrong!")
-            }
           }else if (this.status == 500){
             console.log("Something went wrong!")
           }
         }
       };
-      sreq.send(JSON.stringify())
+      req.send(JSON.stringify());
     }
     catch(e){
-      console.error(e)
+      console.error(e);
     }
-}
-
-
-displayPosts = function(){  /////////DONE
-  //response = JSON.parse(localStorage.getItem("response"));
-  try{
-    var sreq = new XMLHttpRequest();
-    sreq.open("GET", "/users/get_logged_in_data/", true);
-    sreq.setRequestHeader("Content-type", "application/json");
-    sreq.onreadystatechange = function(){
-      if (this.readyState == 4){
-        if (this.status == 200){
-          var response = JSON.parse(sreq.responseText);
-          console.log(response);
-          console.log(response["data"])
-          if(response["success"]){
-            try{
-              var req = new XMLHttpRequest();
-              req.open("GET", "/users/get_user_messages_by_token/", true);
-              req.setRequestHeader("Content-type", "application/json");
-              req.setRequestHeader("Token", response['data']);
-              req.onreadystatechange = function(){
-                if (this.readyState == 4){
-                  if (this.status == 200){
-                    var userMessages = JSON.parse(req.responseText);
-                    console.log(userMessages);
-                    if(userMessages["success"]){
-                      var i;
-                      document.getElementById("wall_posts").innerHTML = "";
-                      n = userMessages["data"]["length"];
-                      console.log(n)
-                      if(n>0){
-                        for(i = 0; i < n; i++){
-                          message = userMessages["data"][i]["content"];
-                          document.getElementById("wall_posts").innerHTML +=
-                                "<p>".concat(message, "</p>");
-                        }
-                      }
-                    }else{
-                      console.log("Something went wrong!")
-                    }
-                  }
-                }else if (this.status == 500){
-                  console.log("Something went wrong!")
-                }
-              };
-              req.send(JSON.stringify());
-            }
-            catch(e){
-              console.error(e);
-            }
-          }else{
-          console.log("Something went wrong!")
-          }
-        }else if (this.status == 500){
-          console.log("Something went wrong!")
-        }
-      }
-    };
-    sreq.send(JSON.stringify())
-  }
-  catch(e){
-    console.error(e)
-  }
-}
-
-refreshWall = function(){  ///////DONE
-	displayPosts();
-}
-
-refreshWallOthers = function(){ ////////DONE
-	displayPostsOthers();
-}
-
-postMessageToOthers = function(){  ///////DONE
-  //response = JSON.parse(localStorage.getItem("response"));
-  try{
-    var sreq = new XMLHttpRequest();
-    sreq.open("GET", "/users/get_logged_in_data/", true);
-    sreq.setRequestHeader("Content-type", "application/json");
-    sreq.onreadystatechange = function(){
-      if (this.readyState == 4){
-        if (this.status == 200){
-          var response = JSON.parse(sreq.responseText);
-          console.log(response);
-          console.log(response["data"])
-          if(response["success"]){
-            try{
-                var req = new XMLHttpRequest();
-                req.open("GET", "/users/get_user_data_by_token/", true);
-                req.setRequestHeader("Content-type", "application/json");
-                req.setRequestHeader("Token", response['data']);
-                req.onreadystatechange = function(){
-                if (this.readyState == 4){
-                    if (this.status == 200){
-                      var loggedinuser = JSON.parse(req.responseText);
-                      console.log(loggedinuser);
-                      if(loggedinuser["success"]){
-                        var mess = {
-                      		email: document.getElementById('search_email').value,
-                      		content: document.getElementById("post_text_others").value
-                    	  };
-                        try{
-                          var post_req = new XMLHttpRequest();
-                          post_req.open("POST", "/users/post_message/", true);
-                          post_req.setRequestHeader("Content-type", "application/json");
-                          post_req.setRequestHeader("Token", response['data']);
-                          post_req.onreadystatechange = function(){
-                          if (this.readyState == 4){
-                              if (this.status == 200){
-                                var resp = JSON.parse(post_req.responseText);
-                                if(resp["success"]){
-                                  console.log("Message posted")
-                                  document.getElementById('post_message_others').style.color = 'green';
-                                  post_message = resp["message"];
-                                  displayPostsOthers();
-                                }
-                                else{
-                                  document.getElementById('post_message_others').style.color = 'red';
-                                  post_message = "Message couldn't be posted";
-                                }
-                                document.getElementById("post_message_others").innerHTML = post_message;
-          	                    document.getElementById("post_text_others").value = "";
-                              }else if (this.status == 500){
-                                document.getElementById('post_message_others').style.color = 'red';
-                                post_message = "Message couldn't be posted";
-                              }
-                            }
-                            };
-                            post_req.send(JSON.stringify(mess));
-                          }
-                          catch(e){
-                            console.error(e);
-                          }
-                        }
-                        else{
-                          console.log("Something went wrong!")
-                        }
-                    }else if (this.status == 500){
-                      console.log("Something went wrong!")
-                    }
-                  }
-                };
-                req.send(JSON.stringify());
-              }
-              catch(e){
-                console.error(e);
-              }
-            }else{
-            console.log("Something went wrong!")
-            }
-          }else if (this.status == 500){
-            console.log("Something went wrong!")
-          }
-        }
-      };
-      sreq.send(JSON.stringify())
-    }
-    catch(e){
-      console.error(e)
-    }
-}
+};
 
 displayPostsOthers = function(){   //////////DONE
-  //response = JSON.parse(localStorage.getItem("response"));
+  response = JSON.parse(sessionStorage.getItem("token"));
   try{
-    var sreq = new XMLHttpRequest();
-    sreq.open("GET", "/users/get_logged_in_data/", true);
-    sreq.setRequestHeader("Content-type", "application/json");
-    sreq.onreadystatechange = function(){
+    var req = new XMLHttpRequest();
+    req.open("GET", "/users/get_user_messages_by_email/" + document.getElementById('search_email').value, true);
+    req.setRequestHeader("Content-type", "application/json");
+    req.setRequestHeader("Token", response);
+    req.onreadystatechange = function(){
       if (this.readyState == 4){
         if (this.status == 200){
-          var response = JSON.parse(sreq.responseText);
-          console.log(response);
-          console.log(response["data"])
-          if(response["success"]){
-            try{
-              var req = new XMLHttpRequest();
-              req.open("GET", "/users/get_user_messages_by_email/" + document.getElementById('search_email').value, true);
-              req.setRequestHeader("Content-type", "application/json");
-              req.setRequestHeader("Token", response['data']);
-              req.onreadystatechange = function(){
-                if (this.readyState == 4){
-                  if (this.status == 200){
-                    var userMessages = JSON.parse(req.responseText);
-                    console.log(userMessages);
-                    if(userMessages["success"]){
-                      var i;
-                      document.getElementById("others_wall_posts").innerHTML = "";
-                      n = userMessages["data"]["length"];
-                      console.log(userMessages["data"])
-                      if(n>0){
-                        for(i = 0; i < n; i++){
-                          message = userMessages["data"][i]["content"];
-                          document.getElementById("others_wall_posts").innerHTML +=
-                                "<p>".concat(message, "</p>");
-                        }
-                      }
-                    }else{
-                      console.log("Something went wrong")
-                    }
-                  }else if (this.status == 500){
-                    console.log("Something went wrong!")
-                  }
-                }
-              };
-              req.send(JSON.stringify());
-            }
-            catch(e){
-              console.error(e);
+          var userMessages = JSON.parse(req.responseText);
+          console.log(userMessages);
+          if(userMessages["success"]){
+            var i;
+            document.getElementById("others_wall_posts").innerHTML = "";
+            n = userMessages["data"]["length"];
+            console.log(userMessages["data"])
+            if(n>0){
+              for(i = 0; i < n; i++){
+                message = userMessages["data"][i]["content"];
+                document.getElementById("others_wall_posts").innerHTML +=
+                      "<p>".concat(message, "</p>");
+              }
             }
           }else{
-          console.log("Something went wrong!")
+            console.log("Something went wrong")
           }
         }else if (this.status == 500){
           console.log("Something went wrong!")
         }
       }
     };
-    sreq.send(JSON.stringify())
+    req.send(JSON.stringify());
   }
   catch(e){
-    console.error(e)
+    console.error(e);
   }
-}
+};
 
 fillUserDetailsOthers = function(){   //////DONE
-  //response = JSON.parse(localStorage.getItem("response"));
+  response = JSON.parse(sessionStorage.getItem("token"));
   try{
-    var sreq = new XMLHttpRequest();
-    sreq.open("GET", "/users/get_logged_in_data/", true);
-    sreq.setRequestHeader("Content-type", "application/json");
-    sreq.onreadystatechange = function(){
+    var req = new XMLHttpRequest();
+    req.open("GET", "/users/get_user_data_by_email/" + document.getElementById('search_email').value, true);
+    req.setRequestHeader("Content-type", "application/json");
+    req.setRequestHeader("Token", response);
+    req.onreadystatechange = function(){
       if (this.readyState == 4){
         if (this.status == 200){
-          var response = JSON.parse(sreq.responseText);
-          console.log(response);
-          console.log(response["data"])
-          if(response["success"]){
-            try{
-              var req = new XMLHttpRequest();
-              req.open("GET", "/users/get_user_data_by_email/" + document.getElementById('search_email').value, true);
-              req.setRequestHeader("Content-type", "application/json");
-              req.setRequestHeader("Token", response['data']);
-              req.onreadystatechange = function(){
-                if (this.readyState == 4){
-                  if (this.status == 200){
-                    var resp = JSON.parse(req.responseText);
-                    console.log(resp);
-                    if(resp["success"]){
-                      firstname = resp["data"][0]["firstname"];
-                      familyname = resp["data"][0]["familyname"];
-                      email = resp["data"][0]["email"];
-                      gender = resp["data"][0]["gender"];
-                      city = resp["data"][0]["city"];
-                      country = resp["data"][0]["country"];
-                      document.getElementById('right_first_name1').innerHTML = firstname;
-                      document.getElementById('right_family_name1').innerHTML = familyname;
-                      document.getElementById('right_email1').innerHTML = email;
-                      document.getElementById('right_gender1').innerHTML = gender;
-                      document.getElementById('right_city1').innerHTML = city;
-                      document.getElementById('right_country1').innerHTML = country;
-                    }else{
-                      console.log("Something went wrong")
-                    }
-                  }else if (this.status == 500){
-                    console.log("Something went wrong!")
-                  }
-                }
-              };
-              req.send(JSON.stringify());
-            }
-            catch(e){
-              console.error(e);
-            }
+          var resp = JSON.parse(req.responseText);
+          console.log(resp);
+          if(resp["success"]){
+            firstname = resp["data"][0]["firstname"];
+            familyname = resp["data"][0]["familyname"];
+            email = resp["data"][0]["email"];
+            gender = resp["data"][0]["gender"];
+            city = resp["data"][0]["city"];
+            country = resp["data"][0]["country"];
+            document.getElementById('right_first_name1').innerHTML = firstname;
+            document.getElementById('right_family_name1').innerHTML = familyname;
+            document.getElementById('right_email1').innerHTML = email;
+            document.getElementById('right_gender1').innerHTML = gender;
+            document.getElementById('right_city1').innerHTML = city;
+            document.getElementById('right_country1').innerHTML = country;
           }else{
-          console.log("Something went wrong!")
+            console.log("Something went wrong")
           }
         }else if (this.status == 500){
           console.log("Something went wrong!")
         }
       }
     };
-    sreq.send(JSON.stringify())
+    req.send(JSON.stringify());
   }
   catch(e){
-    console.error(e)
+    console.error(e);
   }
-}
+};
