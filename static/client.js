@@ -11,7 +11,7 @@ displayView = function(){    //////DONE
   if(sessionStorage.getItem("token")==null){
       try{
         var user = {
-          email: localStorage.getItem("email")//apo kapou email
+          email: localStorage.getItem("email")
         };
         var req = new XMLHttpRequest();
         req.open("POST", "/users/delete_loggedinuser/", true);
@@ -20,9 +20,7 @@ displayView = function(){    //////DONE
           if (this.readyState == 4){
             if (this.status == 200){
               var response = JSON.parse(req.responseText);
-              console.log(response);
               if(response["success"]){
-                localStorage.removeItem("email")
               }else{
                 console.log("Something went wrong!")
               }
@@ -117,7 +115,6 @@ var signUpMechanism = function(){   /////////DONE
         if (this.readyState == 4){
           if (this.status == 200){
             var response = JSON.parse(req.responseText);
-            console.log(response);
             if(response["success"]){
               document.getElementById("signup_username_message").style.color = 'green';
           		document.getElementById("signup_username_message").innerHTML = response['message'];
@@ -154,7 +151,6 @@ var signInMechanism = function(){   /////////DONE
       if (this.readyState == 4){
         if (this.status == 200){
           var response = JSON.parse(req.responseText);
-          console.log(response);
           if(response["success"]){
 
             //localStorage.setItem("response", JSON.stringify(response));
@@ -189,7 +185,6 @@ var signOutMechanism = function(){     /////////DONE
         if (this.readyState == 4){
           if (this.status == 200){
             var response = JSON.parse(req.responseText);
-            console.log(response);
             if(response["success"]){
               sessionStorage.removeItem("token");
             	displayView();
@@ -227,7 +222,6 @@ openTab = function(e, tabID){       ////////DONE
 //serverstub.signIn(serverstub.getUserDataByToken(response['data'])['data']['email'],serverstub.signIn(email, password))
 var check_old_pass = function(){    //////DONE
   resp = JSON.parse(sessionStorage.getItem("token"));
-  //console.log(response['data'])
   if(document.getElementById('old_password').value.length>4){
     try{
       var req = new XMLHttpRequest();
@@ -248,7 +242,6 @@ var check_old_pass = function(){    //////DONE
                   if (this.readyState == 4){
                     if (this.status == 200){
                       var sign_response = JSON.parse(sign_req.responseText);
-                      console.log(sign_response);
                       if(sign_response["success"]){
                         document.getElementById('old_password_message').style.color = 'green';
                     		document.getElementById('old_password_message').innerHTML = 'Old Password is correct';
@@ -328,7 +321,6 @@ var changepassMechanism = function(){    /////DONE
           if (this.readyState == 4){
             if (this.status == 200){
               var response = JSON.parse(req.responseText);
-              console.log(response);
               if(response["success"]){
                 var frm = document.getElementById('formChangePassword');
           			frm.reset();
@@ -342,7 +334,6 @@ var changepassMechanism = function(){    /////DONE
             }
           }
         };
-        console.log(change_pass)
         req.send(JSON.stringify(change_pass))
       }
       catch(e){
@@ -364,7 +355,6 @@ var searchMechanism = function(){ ////DONE
         if (this.readyState == 4){
           if (this.status == 200){
             var resp = JSON.parse(req.responseText);
-            console.log(resp["success"]);
             if (resp["success"]){
               document.getElementById('user_search_message').style.color = 'green';
         			document.getElementById('user_search_message').innerHTML = resp['message'];
@@ -394,7 +384,6 @@ var searchMechanism = function(){ ////DONE
 
 fillUserDetails = function(){  /////////DONE
   response = JSON.parse(sessionStorage.getItem("token"));
-  console.log(response);
   try{
     var req = new XMLHttpRequest();
     req.open("GET", "/users/get_user_data_by_token/", true);
@@ -404,7 +393,6 @@ fillUserDetails = function(){  /////////DONE
       if (this.readyState == 4){
         if (this.status == 200){
           var loggedinuser = JSON.parse(req.responseText);
-          console.log(loggedinuser);
           if(loggedinuser["success"]){
             firstname = loggedinuser["data"][0]["firstname"];
             familyname = loggedinuser["data"][0]["familyname"];
@@ -444,7 +432,6 @@ postMessage = function(){    //////////DONE
         if (this.readyState == 4){
           if (this.status == 200){
             var loggedinuser = JSON.parse(req.responseText);
-            console.log(loggedinuser);
             if(loggedinuser["success"]){
               var mess = {
             		email: loggedinuser["data"][0]["email"],
@@ -454,13 +441,12 @@ postMessage = function(){    //////////DONE
                 var post_req = new XMLHttpRequest();
                 post_req.open("POST", "/users/post_message/", true);
                 post_req.setRequestHeader("Content-type", "application/json");
-                post_req.setRequestHeader("Token", response['data']);
+                post_req.setRequestHeader("Token", response);
                 post_req.onreadystatechange = function(){
                   if (this.readyState == 4){
                     if (this.status == 200){
                       var resp = JSON.parse(post_req.responseText);
                       if(resp["success"]){
-                        console.log("Message posted")
                         document.getElementById('post_message').style.color = 'green';
                         post_message = resp["message"];
                         displayPosts();
@@ -477,8 +463,6 @@ postMessage = function(){    //////////DONE
                     }
                   }
                 };
-                console.log(content)
-                console.log(email)
                 post_req.send(JSON.stringify(mess));
               }
               catch(e){
@@ -512,12 +496,10 @@ displayPosts = function(){  /////////DONE
       if (this.readyState == 4){
         if (this.status == 200){
           var userMessages = JSON.parse(req.responseText);
-          console.log(userMessages);
           if(userMessages["success"]){
             var i;
             document.getElementById("wall_posts").innerHTML = "";
             n = userMessages["data"]["length"];
-            console.log(n)
             if(n>0){
               for(i = 0; i < n; i++){
                 message = userMessages["data"][i]["content"];
@@ -559,7 +541,6 @@ postMessageToOthers = function(){  ///////DONE
       if (this.readyState == 4){
           if (this.status == 200){
             var loggedinuser = JSON.parse(req.responseText);
-            console.log(loggedinuser);
             if(loggedinuser["success"]){
               var mess = {
             		email: document.getElementById('search_email').value,
@@ -569,13 +550,12 @@ postMessageToOthers = function(){  ///////DONE
                 var post_req = new XMLHttpRequest();
                 post_req.open("POST", "/users/post_message/", true);
                 post_req.setRequestHeader("Content-type", "application/json");
-                post_req.setRequestHeader("Token", response['data']);
+                post_req.setRequestHeader("Token", response);
                 post_req.onreadystatechange = function(){
                 if (this.readyState == 4){
                     if (this.status == 200){
                       var resp = JSON.parse(post_req.responseText);
                       if(resp["success"]){
-                        console.log("Message posted")
                         document.getElementById('post_message_others').style.color = 'green';
                         post_message = resp["message"];
                         displayPostsOthers();
@@ -624,12 +604,10 @@ displayPostsOthers = function(){   //////////DONE
       if (this.readyState == 4){
         if (this.status == 200){
           var userMessages = JSON.parse(req.responseText);
-          console.log(userMessages);
           if(userMessages["success"]){
             var i;
             document.getElementById("others_wall_posts").innerHTML = "";
             n = userMessages["data"]["length"];
-            console.log(userMessages["data"])
             if(n>0){
               for(i = 0; i < n; i++){
                 message = userMessages["data"][i]["content"];
@@ -663,7 +641,6 @@ fillUserDetailsOthers = function(){   //////DONE
       if (this.readyState == 4){
         if (this.status == 200){
           var resp = JSON.parse(req.responseText);
-          console.log(resp);
           if(resp["success"]){
             firstname = resp["data"][0]["firstname"];
             familyname = resp["data"][0]["familyname"];

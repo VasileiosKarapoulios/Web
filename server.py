@@ -189,9 +189,7 @@ def post_message():
 @app.route('/users/delete_loggedinuser/', methods=['POST'])
 def delete_loggedinuser():
     data = request.get_json()
-    print(data)
     result = database_helper.delete_loggedinuser(data['email'])
-    print(result)
     if result:
         return json.dumps({"success": "true", "message": "Logged in user deleted!"}), 200
     else:
