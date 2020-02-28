@@ -8,7 +8,8 @@ displayView = function(){    //////DONE
   token = sessionStorage.getItem("token");
   var welcome = document.getElementById("welcomeview").innerHTML;
   var profile = document.getElementById("profileview").innerHTML;
-  if(sessionStorage.getItem("token")==null){
+  if(token==null){
+      var display = welcome;
       try{
         var user = {
           email: localStorage.getItem("email")
@@ -34,9 +35,6 @@ displayView = function(){    //////DONE
         console.error(e);
       }
     }
-  if (token == null) {
-    var display = welcome;
-  }
   else {
     var display = profile;
     var connection = new WebSocket('ws://127.0.0.1:5000/check');

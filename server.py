@@ -27,7 +27,7 @@ def find_user(email=None):
         result = database_helper.find_user(email)
         return jsonify(result)
 
-
+signed_in_users = dict()
 @app.route('/users/sign_in/', methods=['POST'])
 def sign_in():
     data = request.get_json()
@@ -190,12 +190,16 @@ def post_message():
 def delete_loggedinuser():
     data = request.get_json()
     result = database_helper.delete_loggedinuser(data['email'])
+    try:
+        del signed_in_users[data['email'].replace('"', '')]
+    except:
+        pass
     if result:
         return json.dumps({"success": "true", "message": "Logged in user deleted!"}), 200
     else:
         return json.dumps({"success": "false", "message": "Logged in user could not be deleted!"}), 500
 
-signed_in_users = dict()
+
 
 @app.route('/check')
 def check():
