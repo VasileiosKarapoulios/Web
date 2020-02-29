@@ -35,8 +35,12 @@ def sign_in():
         msg = {
           'message': 'Logged in from another device'
           }
-        resp = database_helper.delete_loggedinuser(data['email'])
-        signed_in_users[data['email']].send(json.dumps(msg))
+        try:
+            signed_in_users[data['email']].send(json.dumps(msg))
+            del signed_in_users[data['email']]
+            database_helper.delete_loggedinuser(data['email'])
+        except:
+            pass
     if 'email' in data and 'password' in data:
         user = find_user(data['email']).get_json()[0]
         if user['email'] is not None and user['password'] == data['password']:
@@ -214,6 +218,10 @@ def check():
                 msg = json.loads(msg)
                 msg = {'message': 'Successfully logged in'}
                 ws.send(json.dumps(msg))
+        try:
+            del signed_in_users[user]
+        except:
+            pass
     return 'None'
 
 

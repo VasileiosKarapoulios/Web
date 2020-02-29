@@ -10,32 +10,8 @@ displayView = function(){    //////DONE
   var profile = document.getElementById("profileview").innerHTML;
   if(token==null){
       var display = welcome;
-      try{
-        var user = {
-          email: localStorage.getItem("email")
-        };
-        var req = new XMLHttpRequest();
-        req.open("POST", "/users/delete_loggedinuser/", true);
-        req.setRequestHeader("Content-type", "application/json");
-        req.onreadystatechange = function(){
-          if (this.readyState == 4){
-            if (this.status == 200){
-              var response = JSON.parse(req.responseText);
-              if(response["success"]){
-              }else{
-                console.log("Something went wrong!")
-              }
-            }else if (this.status == 500){
-            }
-          }
-        };
-        req.send(JSON.stringify(user))
-      }
-      catch(e){
-        console.error(e);
-      }
-    }
-  else {
+  }
+  else{
     var display = profile;
     var connection = new WebSocket('ws://127.0.0.1:5000/check');
     connection.onopen = function(){

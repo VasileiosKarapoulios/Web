@@ -32,6 +32,7 @@ def find_user(email):
 
 def sign_in(token, email):
     try:
+        get_db().execute("delete from loggedinusers where email like ?;", [email])
         get_db().execute("insert into loggedinusers values(?,?);", [email, token])
         get_db().commit()
         return True
