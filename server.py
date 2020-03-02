@@ -6,10 +6,10 @@ import string
 from gevent.pywsgi import WSGIServer
 from geventwebsocket.handler import WebSocketHandler
 
-
 app = Flask(__name__)
 
 app.debug = True
+
 
 @app.route('/')
 def root():
@@ -25,16 +25,26 @@ def token_gen(n):
 def find_user(email=None):
     if email is not None:
         result = database_helper.find_user(email)
+    else:
+        result = False
+    if result == False:
+        return False
+    else:
         return jsonify(result)
 
+
 signed_in_users = dict()
+
+
 @app.route('/users/sign_in/', methods=['POST'])
 def sign_in():
     data = request.get_json()
+    #print(data)
+    #print(signed_in_users)
     if data['email'] in signed_in_users:
         msg = {
-          'message': 'Logged in from another device'
-          }
+            'message': 'Logged in from another device'
+        }
         try:
             signed_in_users[data['email']].send(json.dumps(msg))
             del signed_in_users[data['email']]
@@ -42,23 +52,28 @@ def sign_in():
         except:
             pass
     if 'email' in data and 'password' in data:
-        user = find_user(data['email']).get_json()[0]
-        if user['email'] is not None and user['password'] == data['password']:
-            token = token_gen(35)
+        #print(find_user(data['email']))
+        if find_user(data['email']) != False:
+            user = find_user(data['email']).get_json()[0]
+            if user['email'] is not None and user['password'] == data['password']:
+                token = token_gen(35)
+            else:
+                return '', 400
+            result = database_helper.sign_in(token, user['email'])
+            if result:
+                return json.dumps({"success": "true", "message": "Successfully signed in.", "data": token}), 200
+            else:
+                return json.dumps({"success": "false", "message": "Something went wrong!"}), 500
         else:
             return '', 400
-        result = database_helper.sign_in(token, user['email'])
-        if result:
-            return json.dumps({"success": "true", "message": "Successfully signed in.", "data": token}), 200
-        else:
-            return json.dumps({"success": "false", "message": "Something went wrong!"}), 500
     else:
         return '', 400
 
+
 @app.route('/users/check_old_password/<email>,<password>', methods=['GET'])
-def check_old_password(email=None,password=None):
+def check_old_password(email=None, password=None):
     if email and password:
-        result = database_helper.check_old_password(email,password)
+        result = database_helper.check_old_password(email, password)
         if result:
             return json.dumps({"success": "true", "message": "Password matching!"}), 200
         else:
@@ -74,8 +89,6 @@ def get_logged_in_data():
         return json.dumps({"success": "true", "message": "User's data!", "data": result}), 200
     else:
         return json.dumps({"success": "false", "message": "Something went wrong!"}), 500
-
-
 
 
 @app.route('/users/sign_up/', methods=['POST'])
@@ -204,7 +217,6 @@ def delete_loggedinuser():
         return json.dumps({"success": "false", "message": "Logged in user could not be deleted!"}), 500
 
 
-
 @app.route('/check')
 def check():
     if request.environ.get('wsgi.websocket'):
@@ -231,7 +243,7 @@ def after_request(exception):
 
 
 if __name__ == '__main__':
-     http_server = WSGIServer(('127.0.0.1',5000), app, handler_class=WebSocketHandler)
-     http_server.serve_forever()
-
-    #app.run()
+    print("Server: http://127.0.0.1:5000/")
+    http_server = WSGIServer(('127.0.0.1', 5000), app, handler_class=WebSocketHandler)
+    http_server.serve_forever()
+    # app.run()

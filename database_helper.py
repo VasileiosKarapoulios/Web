@@ -22,11 +22,14 @@ def find_user(email):
     cursor = get_db().execute('select * from users where email like ?', [email])
     rows = cursor.fetchall()
     cursor.close()
-    result = []
-    for index in range(len(rows)):
-        result.append({'email': rows[index][0], 'password': rows[index][1],
-                       'firstname': rows[index][2], 'familyname': rows[index][3],
-                       'gender': rows[index][4], 'city': rows[index][5], 'country': rows[index][6]})
+    if len(rows)>0:
+        result = []
+        for index in range(len(rows)):
+            result.append({'email': rows[index][0], 'password': rows[index][1],
+                           'firstname': rows[index][2], 'familyname': rows[index][3],
+                           'gender': rows[index][4], 'city': rows[index][5], 'country': rows[index][6]})
+    else:
+        result = False
     return result
 
 

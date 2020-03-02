@@ -336,12 +336,12 @@ var searchMechanism = function(){ ////DONE
         			displayPostsOthers();
             }else{
               document.getElementById('user_search_message').style.color = 'red';
-        			document.getElementById('user_search_message').innerHTML = resp['message'];
+        	    document.getElementById('user_search_message').innerHTML = resp['message'];
             }
             }else if (this.status == 500){
               console.log("Something went wrong!")
               document.getElementById('user_search_message').style.color = 'red';
-        			document.getElementById('user_search_message').innerHTML = resp['message'];
+        			document.getElementById('user_search_message').innerHTML = "Requested user not found!";
             }
           }
         };
