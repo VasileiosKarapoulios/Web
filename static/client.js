@@ -129,9 +129,6 @@ var signInMechanism = function(){   /////////DONE
         if (this.status == 200){
           var response = JSON.parse(req.responseText);
           if(response["success"]){
-
-            //localStorage.setItem("response", JSON.stringify(response));
-            //localStorage.setItem("isLoggedIn", true);
             sessionStorage.setItem("token", JSON.stringify(response["data"]));
             localStorage.setItem("email", JSON.stringify(user["email"]));
             displayView();
@@ -196,7 +193,6 @@ openTab = function(e, tabID){       ////////DONE
   e.currentTarget.className += " active";
 };
 
-//serverstub.signIn(serverstub.getUserDataByToken(response['data'])['data']['email'],serverstub.signIn(email, password))
 var check_old_pass = function(){    //////DONE
   resp = JSON.parse(sessionStorage.getItem("token"));
   if(document.getElementById('old_password').value.length>4){
@@ -283,7 +279,7 @@ var check_pass_change = function() {    /////DONE
 
 var changepassMechanism = function(){    /////DONE
   resp = JSON.parse(sessionStorage.getItem("token"));
-	if(document.getElementById('new_password').value.length>4){ //Apo katw esvisa ena temp, den 3erw an xreiazetai
+	if(document.getElementById('new_password').value.length>4){ //Deleted a temp in the if statement below, not sure if needed
 		if ((document.getElementById('new_password').value == document.getElementById('rep_new_password').value) && (document.getElementById('new_password').value != document.getElementById('old_password').value)){
       var change_pass = {
         oldpassword: document.getElementById('old_password').value,
@@ -356,7 +352,6 @@ var searchMechanism = function(){ ////DONE
 	}else{
 		document.getElementById('user_search_message').innerHTML = "";
 	}
-	//to resp exei mesa ta stoixeia
 };
 
 fillUserDetails = function(){  /////////DONE

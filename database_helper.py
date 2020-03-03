@@ -62,14 +62,6 @@ def delete_loggedinuser(email):
     except:
         return False
 
-def get_logged_in_data():
-
-    cursor = get_db().execute('select token from loggedinusers')
-    result = cursor.fetchall()[0][0]
-    cursor.close()
-    return result
-
-
 def sign_up(email, password, firstname, familyname, gender, city, country):
     try:
         get_db().execute("insert into users values(?,?,?,?,?,?,?);",
