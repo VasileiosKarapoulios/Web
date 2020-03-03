@@ -13,17 +13,20 @@ displayView = function(){    //////DONE
   }
   else{
     var display = profile;
-    var connection = new WebSocket('ws://127.0.0.1:5000/check');
+    var connection = new WebSocket('ws://127.0.0.1:5000/check_websocket');
     connection.onopen = function(){
-        msg = {'token': JSON.parse(sessionStorage.getItem("token"))};
-        connection.send(JSON.stringify(msg));
+        message = {'token': JSON.parse(sessionStorage.getItem("token"))};
+        connection.send(JSON.stringify(message));
     };
     connection.onmessage = function(e){
-    msg = JSON.parse(e.data)['message']
-        if(msg == 'Logged in from another device'){
+        message = JSON.parse(e.data)['message']
+        if(message == 'Logged in from another device'){
             sessionStorage.removeItem('token');
             displayView();
         }
+    };
+    connection.onclose = function(){
+        connection.close();
     };
   }
 
