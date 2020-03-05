@@ -110,10 +110,21 @@
 						<div class="right_user_info" id="right_city"></div>
 						<div class="left_user_info" id="left_country">Country:</div>
 						<div class="right_user_info" id="right_country"></div>
+						<div class="left_user_info" id="left_profile_pic">Profile Picture</div>
+						<div class="right_user_info" id="right_profile_pic"><img class="img-circle" src="/static/uploaded/me.png"/></div>
 						</div>
 						<div class="home_column col-sm-6" id="rightColHome">
 							<div id="post_row">
 								<textarea class="form-control" id="post_text" rows="4" cols="37" placeholder="What's happening?"></textarea>
+								<div class="container-fluid">
+								<form enctype="multipart/form-data" class="md-form">
+								  <div class="file-field">
+								    <div class="btn btn-sm float-left">
+								      <input type="file" onchange="upload_file();return false" name="myFile">
+								    </div>
+								  </div>
+								</form>
+								</div>
 								<div align="right">
 									<button class="button btn btn-default" id="post_button" type="button" onclick="postMessage();">Tweed</button>
 								</div>
@@ -138,7 +149,7 @@
 								Search:
 								<input class="form-control" type="email" name="search_email" id="search_email" placeholder="E-mail" required>
 								<div align="right">
-								<input class="btn btn-default" type="submit" value="Search User">
+									<input class="btn btn-default" type="submit" value="Search User">
 								</div>
 								<span id='user_search_message'></span>
 							</form>
@@ -160,10 +171,21 @@
 						<div class="right_user_info" id="right_city1"></div>
 						<div class="left_user_info" id="left_country1">Country:</div>
 						<div class="right_user_info" id="right_country1"></div>
+						<div class="left_user_info" id="left_profile_pic1">Profile Picture</div>
+						<div class="right_user_info" id="right_profile_pic1"><img class="img-circle" src="/static/uploaded/me.png"/></div>
 					</div>
 					<div class="home_column col-sm-6" id="rightColHomeOthers">
 						<div id="post_row2">
 							<textarea class="form-control" id="post_text_others" rows="4" cols="50" placeholder="What's happening?"></textarea>
+							<div class="container-fluid">
+							<form enctype="multipart/form-data" class="md-form">
+								<div class="file-field">
+									<div class="btn btn-sm float-left">
+										<input type="file" onchange="upload_file_others();return false" name="myFile">
+									</div>
+								</div>
+							</form>
+							</div>
 							<div align="right">
 							<button class="button btn btn-default" id="post_button_others" type="button" onclick="postMessageToOthers();">Tweed</button>
 							</div>

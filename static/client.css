@@ -71,6 +71,11 @@ label {
   background-color: white;
   border-top: 5px solid #1DA1F2;
 }
+
+.img-circle{
+    width: 5% !important;
+}
+
 /*
 #formLogin {
 	margin-left:10px;
@@ -214,6 +219,17 @@ div.left_user_info{
 
 div.right_user_info{
   float: left;
-  margin-bottom: 5%;
-  width: auto;
+  width: auto%;
+}
+
+#right_profile_pic{
+  padding-left: 2%;
+}
+
+.audio_tags{
+  width: 200px !important;
+}
+
+.file_upload{
+    float:left;
 }
