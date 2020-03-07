@@ -5,8 +5,10 @@ import random
 import string
 from gevent.pywsgi import WSGIServer
 from geventwebsocket.handler import WebSocketHandler
+from flask_bcrypt import Bcrypt
 
 app = Flask(__name__)
+bcrypt = Bcrypt(app)
 
 app.debug = True
 
@@ -16,7 +18,7 @@ def root():
     return send_from_directory('static', 'client.html')
 
 
-def token_gen(n):
+def token_generator(n):
     letters = string.ascii_letters + "0123456789"
     return ''.join(random.choice(letters) for i in range(n))
 
@@ -27,7 +29,7 @@ def find_user(email=None):
         result = database_helper.find_user(email)
     else:
         result = False
-    if result == False:
+    if not result:
         return False
     else:
         return jsonify(result)
@@ -50,10 +52,10 @@ def sign_in():
         except:
             pass
     if 'email' in data and 'password' in data:
-        if find_user(data['email']) != False:
+        if find_user(data['email']):
             user = find_user(data['email']).get_json()[0]
-            if user['email'] is not None and user['password'] == data['password']:
-                token = token_gen(35)
+            if user['email'] is not None and bcrypt.check_password_hash(user['password'], data['password']):
+                token = token_generator(35)
             else:
                 return '', 400
             result = database_helper.sign_in(token, user['email'])
@@ -69,14 +71,17 @@ def sign_in():
 
 @app.route('/users/check_old_password/<email>,<password>', methods=['GET'])
 def check_old_password(email=None, password=None):
-    if email and password:
-        result = database_helper.check_old_password(email, password)
-        if result:
-            return json.dumps({"success": "true", "message": "Password matching!"}), 200
-        else:
-            return json.dumps({"success": "false", "message": "Something went wrong!"}), 500
+    if email and password and find_user(email):
+        user_password = find_user(email).get_json()[0]['password']
+        if bcrypt.check_password_hash(user_password, password):
+            result = database_helper.check_old_password(email, user_password)
+            if result:
+                return json.dumps({"success": "true", "message": "Password matching!"}), 200
+            else:
+                return json.dumps({"success": "false", "message": "Something went wrong!"}), 500
     else:
         return '', 400
+
 
 @app.route('/users/sign_up/', methods=['POST'])
 def sign_up():
@@ -86,7 +91,8 @@ def sign_up():
         if len(data['email']) <= 30 and 5 <= len(data['password']) <= 30 \
                 and len(data['firstname']) <= 30 and len(data['familyname']) <= 30 and len(data['gender']) <= 30 \
                 and len(data['city']) <= 30 and len(data['country']) <= 30:
-            result = database_helper.sign_up(data['email'], data['password'], data['firstname'], data['familyname'],
+            pw_hashed = bcrypt.generate_password_hash(data['password'])
+            result = database_helper.sign_up(data['email'], pw_hashed, data['firstname'], data['familyname'],
                                              data['gender'], data['city'], data['country'])
             if result:
                 return json.dumps({"success": "true", "message": "User saved!"}), 200
@@ -117,11 +123,15 @@ def change_password():
     data = request.get_json()
     if 'oldpassword' in data and 'newpassword' in data:
         if 5 <= len(data['newpassword']) <= 30:
-            result = database_helper.change_password(token, data['oldpassword'], data['newpassword'])
-            if result:
-                return json.dumps({"success": "true", "message": "Password changed!"}), 200
-            else:
-                return json.dumps({"success": "false", "message": "Something went wrong!"}), 500
+            user_email = database_helper.get_user_data_by_token(token)[0]['email']
+            user = find_user(user_email).get_json()[0]
+            new_pw_hashed = bcrypt.generate_password_hash(data['newpassword'])
+            if bcrypt.check_password_hash(user['password'], data['oldpassword']):
+                result = database_helper.change_password(token, user['password'], new_pw_hashed)
+                if result:
+                    return json.dumps({"success": "true", "message": "Password changed!"}), 200
+                else:
+                    return json.dumps({"success": "false", "message": "Something went wrong!"}), 500
         else:
             return '', 400
     else:
@@ -188,6 +198,7 @@ def post_message():
             return '', 400
     else:
         return '', 400
+
 
 @app.route('/check_websocket')
 def check_websocket():
