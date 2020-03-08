@@ -18,6 +18,39 @@ def disconnect_db():
         g.db = None
 
 
+
+
+def upload_file(filename, email, email_wall):
+    try:
+        get_db().execute("insert into wall values(?,?,?);", [email_wall, email, filename])
+        get_db().commit()
+        return True
+    except:
+        return False
+
+def upload_profile(filename, email):
+    try:
+        get_db().execute("delete from prof_pics where email like ?;", [email])
+        get_db().execute("insert into prof_pics values(?,?);", [email, filename])
+        get_db().commit()
+        return True
+    except:
+        return False
+
+def load_profile_picture(email):
+    try:
+        cursor = get_db().execute('select * from prof_pics where email like ?', [email])
+        rows = cursor.fetchall()
+        cursor.close()
+        if len(rows)>0:
+            result = rows[0][1]
+            return result
+        else:
+            return False
+    except:
+        return False
+
+
 def find_user(email):
     cursor = get_db().execute('select * from users where email like ?', [email])
     rows = cursor.fetchall()

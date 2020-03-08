@@ -39,6 +39,159 @@ displayView = function(){    //////DONE
   }
 };
 
+
+
+var upload_profile = function(){
+  resp = JSON.parse(sessionStorage.getItem("token"));
+  try{
+        var req = new XMLHttpRequest();
+        req.open("GET", "/users/get_user_data_by_token/", true);
+        req.setRequestHeader("Content-type", "application/json");
+        req.setRequestHeader("Token", resp);
+        req.onreadystatechange = function(){
+          if (this.readyState == 4){
+            if (this.status == 200){
+              var loggedinuser = JSON.parse(req.responseText);
+              if(loggedinuser["success"]){
+                  try{
+                    var data = new FormData();
+                    //console.log(document.getElementById("file").files[0]);
+                    data.append("file", document.getElementById("prof_pic").files[0]);
+                    params = loggedinuser["data"][0]['email'];
+                    $.ajax({
+                      url: "http://127.0.0.1:5000/users/upload_profile/" + params,
+                      type: 'POST',
+                      processData: false, // important
+                      contentType: false, // important
+                      dataType : 'json',
+                      data: data,
+                      success : function(data){
+                            console.log(data);
+                      },
+                    });
+                    fillUserDetails();
+                  }
+                  catch(e){
+                    console.error(e);
+                  }
+              }else{
+                console.log("Something went wrong");
+              }
+            }else if (this.status == 500){
+              console.log("Something went wrong!");
+            }
+          }
+        };
+        req.send();
+      }
+      catch(e){
+        console.error(e);
+      }
+}
+
+
+
+
+
+var upload_file = function(){
+  resp = JSON.parse(sessionStorage.getItem("token"));
+  try{
+        var req = new XMLHttpRequest();
+        req.open("GET", "/users/get_user_data_by_token/", true);
+        req.setRequestHeader("Content-type", "application/json");
+        req.setRequestHeader("Token", resp);
+        req.onreadystatechange = function(){
+          if (this.readyState == 4){
+            if (this.status == 200){
+              var loggedinuser = JSON.parse(req.responseText);
+              if(loggedinuser["success"]){
+                  try{
+                    var data = new FormData();
+                    //console.log(document.getElementById("file").files[0]);
+                    data.append("file", document.getElementById("file").files[0]);
+                    params = loggedinuser["data"][0]['email'] + ',' + loggedinuser["data"][0]['email'];
+                    $.ajax({
+                      url: "http://127.0.0.1:5000/users/upload_file/" + params,
+                      type: 'POST',
+                      processData: false, // important
+                      contentType: false, // important
+                      dataType : 'json',
+                      data: data,
+                      success : function(data){
+                            console.log(data);
+                      },
+                    });
+                    displayPosts();
+                  }
+                  catch(e){
+                    console.error(e);
+                  }
+              }else{
+                console.log("Something went wrong");
+              }
+            }else if (this.status == 500){
+              console.log("Something went wrong!");
+            }
+          }
+        };
+        req.send();
+      }
+      catch(e){
+        console.error(e);
+      }
+      displayPosts();
+}
+
+var upload_file_other = function(){
+  response = JSON.parse(sessionStorage.getItem("token"));
+  try{
+      var req = new XMLHttpRequest();
+      req.open("GET", "/users/get_user_data_by_token/", true);
+      req.setRequestHeader("Content-type", "application/json");
+      req.setRequestHeader("Token", response);
+      req.onreadystatechange = function(){
+      if (this.readyState == 4){
+          if (this.status == 200){
+            var loggedinuser = JSON.parse(req.responseText);
+            if(loggedinuser["success"]){
+                  email = document.getElementById('search_email').value;
+                  try{
+                    var data = new FormData();
+                    //console.log(document.getElementById("file").files[0]);
+                    data.append("file", document.getElementById("file_other").files[0]);
+                    params = loggedinuser["data"][0]['email'] + ',' + email;
+                    $.ajax({
+                      url: "http://127.0.0.1:5000/users/upload_file/" + params,
+                      type: 'POST',
+                      processData: false, // important
+                      contentType: false, // important
+                      dataType : 'json',
+                      data: data,
+                      success : function(data){
+                            console.log(data);
+                      },
+                    });
+                    displayPostsOthers();
+                  }
+                  catch(e){
+                    console.error(e);
+                  }
+              }else{
+                console.log("Something went wrong");
+              }
+            }else if (this.status == 500){
+              console.log("Something went wrong!");
+            }
+          }
+        };
+        req.send();
+      }
+      catch(e){
+        console.error(e);
+      }
+      displayPostsOthers();
+}
+
 var check = function() {      /////////DONE
 	if(document.getElementById('signup_password').value.length>4){
 	  if (document.getElementById('signup_password').value == document.getElementById('signup_rep_password').value) {
@@ -378,6 +531,33 @@ fillUserDetails = function(){  /////////DONE
             document.getElementById('right_gender').innerHTML = gender;
             document.getElementById('right_city').innerHTML = city;
             document.getElementById('right_country').innerHTML = country;
+            try{
+              params = loggedinuser["data"][0]['email'];
+              var sign_req = new XMLHttpRequest();
+              sign_req.open("GET", "/users/load_profile_picture/"+ params, true);
+              sign_req.setRequestHeader("Content-type", "application/json");
+              sign_req.onreadystatechange = function(){
+                if (this.readyState == 4){
+                  if (this.status == 200){
+                    var sign_response = JSON.parse(sign_req.responseText);
+                    if(sign_response["success"]){
+                      document.getElementById( 'profile_picture' ).src = "/static/uploaded/" + loggedinuser["data"][0]['email'] + "/ProfilePicture/" + sign_response['data']
+                    }
+                    else{
+                      console.log("Something went wrong!");
+                    }
+
+                  }else{
+                    console.log("Something went wrong!");
+                  }
+                }else{
+                  console.log("Something went wrong!");
+                }
+              };
+                sign_req.send(JSON.stringify());
+            }catch(e){
+              console.log("Something went wrong!");
+            }
           }else{
             console.log("Something went wrong")
           }
@@ -476,16 +656,12 @@ displayPosts = function(){  /////////DONE
               for(i = 0; i < n; i++){
                 message = userMessages["data"][i]["content"];
                 if(message.endsWith(".png")){
-                  image_path_str = "<p><img src=/static/uploaded/";
+                  image_path_str = "<p><img src=/static/uploaded/".concat(userMessages["data"][i]["email"]).concat("/");
                   document.getElementById("wall_posts").innerHTML += image_path_str.concat(message).concat(" width=50px height=50px/></p>");
                 }else if(message.endsWith(".mp4")){
-                  video_path_str = "<p><video width=200 controls><source src=/static/uploaded/";
+                  video_path_str = "<p><video width=200 controls><source src=/static/uploaded/".concat(userMessages["data"][i]["email"]).concat("/");
                   document.getElementById("wall_posts").innerHTML += video_path_str.concat(message).concat(" type=video/mp4></video></p>");
-                }else if(message.endsWith(".mpeg")){
-                  audio_path_str = "<p><audio class=audio_tags controls><source src=/static/uploaded/";
-                  document.getElementById("wall_posts").innerHTML += audio_path_str.concat(message).concat(" type=audio/mpeg></audio></p>");
-                }
-                else{
+                }else{
                 document.getElementById("wall_posts").innerHTML +=
                       "<p>".concat(message, "</p>");
                     }
@@ -596,16 +772,12 @@ displayPostsOthers = function(){   //////////DONE
               for(i = 0; i < n; i++){
                 message = userMessages["data"][i]["content"];
                 if(message.endsWith(".png")){
-                  image_path_str = "<p><img src=/static/uploaded/";
+                  image_path_str = "<p><img src=/static/uploaded/".concat(userMessages["data"][i]["email"]).concat("/");
                   document.getElementById("others_wall_posts").innerHTML += image_path_str.concat(message).concat(" width=50px height=50px/></p>");
                 }else if(message.endsWith(".mp4")){
-                  video_path_str = "<p><video width=200 controls><source src=/static/uploaded/";
+                  video_path_str = "<p><video width=200 controls><source src=/static/uploaded/".concat(userMessages["data"][i]["email"]).concat("/");
                   document.getElementById("others_wall_posts").innerHTML += video_path_str.concat(message).concat(" type=video/mp4></video></p>");
-                }else if(message.endsWith(".mpeg")){
-                  audio_path_str = "<p><audio class=audio_tags controls><source src=/static/uploaded/";
-                  document.getElementById("others_wall_posts").innerHTML += audio_path_str.concat(message).concat(" type=audio/mpeg></audio></p>");
-                }
-                else{
+                }else{
                 document.getElementById("others_wall_posts").innerHTML +=
                       "<p>".concat(message, "</p>");
                     }
@@ -650,6 +822,33 @@ fillUserDetailsOthers = function(){   //////DONE
             document.getElementById('right_gender1').innerHTML = gender;
             document.getElementById('right_city1').innerHTML = city;
             document.getElementById('right_country1').innerHTML = country;
+            try{
+              params = document.getElementById('search_email').value;
+              var sign_req = new XMLHttpRequest();
+              sign_req.open("GET", "/users/load_profile_picture/"+ params, true);
+              sign_req.setRequestHeader("Content-type", "application/json");
+              sign_req.onreadystatechange = function(){
+                if (this.readyState == 4){
+                  if (this.status == 200){
+                    var sign_response = JSON.parse(sign_req.responseText);
+                    if(sign_response["success"]){
+                      document.getElementById( 'profile_picture_other' ).src = "/static/uploaded/" + document.getElementById('search_email').value + "/ProfilePicture/" + sign_response['data']
+                    }
+                    else{
+                      console.log("Something went wrong!");
+                    }
+
+                  }else{
+                    console.log("Something went wrong!");
+                  }
+                }else{
+                  console.log("Something went wrong!");
+                }
+              };
+                sign_req.send(JSON.stringify());
+            }catch(e){
+              console.log("Something went wrong!");
+            }
           }else{
             console.log("Something went wrong")
           }

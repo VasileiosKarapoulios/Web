@@ -20,3 +20,9 @@ create table loggedinusers(
     token varchar(30),
     primary key(email)
 );
+
+create table prof_pics(
+    email varchar(30),
+    foto varchar(30),
+    primary key(email)
+);

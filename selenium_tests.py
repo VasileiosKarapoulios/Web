@@ -15,11 +15,11 @@ driver.get("http://127.0.0.1:5000/")
 
 def run_tests():
     if len(sys.argv[1:]) >= 1:
-        email = "testuser234245@gmail.com"
+        email = "testuser1234567890@gmail.com"
         password = repeat_password = "aaaaa"
         message1 = "This is an automated message from Selenium (Home Tab)"
         message2 = "This is an automated message from Selenium (Browse Tab)"
-        new_password = "12345"
+        new_password = "1234567890"
         test_sign_up(email, password, repeat_password, "Test", "User", "Male", "Linkoping", "Sweden")
         test_sign_in(email, password)
         test_post_message(message1)
