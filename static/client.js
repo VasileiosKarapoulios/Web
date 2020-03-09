@@ -14,6 +14,7 @@ displayView = function(){    //////DONE
   else{
     var display = profile;
     var connection = new WebSocket('ws://127.0.0.1:5000/check_websocket');
+    //var connection = new WebSocket('wss://' + location.host +'/check_websocket');
     connection.onopen = function(){
         message = {'token': JSON.parse(sessionStorage.getItem("token"))};
         connection.send(JSON.stringify(message));
@@ -59,7 +60,7 @@ var upload_profile = function(){
                     data.append("file", document.getElementById("prof_pic").files[0]);
                     params = loggedinuser["data"][0]['email'];
                     $.ajax({
-                      url: "http://127.0.0.1:5000/users/upload_profile/" + params,
+                      url: "/users/upload_profile/" + params,
                       type: 'POST',
                       processData: false, // important
                       contentType: false, // important
@@ -70,6 +71,8 @@ var upload_profile = function(){
                       },
                     });
                     fillUserDetails();
+					var frm = document.getElementById('prof_pic_form');
+					frm.reset();
                   }
                   catch(e){
                     console.error(e);
@@ -77,7 +80,7 @@ var upload_profile = function(){
               }else{
                 console.log("Something went wrong");
               }
-            }else if (this.status == 500){
+            }else if (this.status == 400){
               console.log("Something went wrong!");
             }
           }
@@ -87,6 +90,7 @@ var upload_profile = function(){
       catch(e){
         console.error(e);
       }
+	fillUserDetails();
 }
 
 
@@ -111,7 +115,7 @@ var upload_file = function(){
                     data.append("file", document.getElementById("file").files[0]);
                     params = loggedinuser["data"][0]['email'] + ',' + loggedinuser["data"][0]['email'];
                     $.ajax({
-                      url: "http://127.0.0.1:5000/users/upload_file/" + params,
+                      url: "/users/upload_file/" + params,
                       type: 'POST',
                       processData: false, // important
                       contentType: false, // important
@@ -122,6 +126,8 @@ var upload_file = function(){
                       },
                     });
                     displayPosts();
+					var frm = document.getElementById('uploadForm');
+					frm.reset();
                   }
                   catch(e){
                     console.error(e);
@@ -129,7 +135,7 @@ var upload_file = function(){
               }else{
                 console.log("Something went wrong");
               }
-            }else if (this.status == 500){
+            }else if (this.status == 400){
               console.log("Something went wrong!");
             }
           }
@@ -161,7 +167,7 @@ var upload_file_other = function(){
                     data.append("file", document.getElementById("file_other").files[0]);
                     params = loggedinuser["data"][0]['email'] + ',' + email;
                     $.ajax({
-                      url: "http://127.0.0.1:5000/users/upload_file/" + params,
+                      url: "/users/upload_file/" + params,
                       type: 'POST',
                       processData: false, // important
                       contentType: false, // important
@@ -172,6 +178,8 @@ var upload_file_other = function(){
                       },
                     });
                     displayPostsOthers();
+					var frm = document.getElementById('uploadFormOther');
+					frm.reset();
                   }
                   catch(e){
                     console.error(e);
@@ -179,7 +187,7 @@ var upload_file_other = function(){
               }else{
                 console.log("Something went wrong");
               }
-            }else if (this.status == 500){
+            }else if (this.status == 400){
               console.log("Something went wrong!");
             }
           }
@@ -392,7 +400,7 @@ var check_old_pass = function(){    //////DONE
             }else{
               console.log("Something went wrong");
             }
-          }else if (this.status == 500){
+          }else if (this.status == 400){
             console.log("Something went wrong!");
           }
         }
@@ -490,7 +498,7 @@ var searchMechanism = function(){ ////DONE
               document.getElementById('user_search_message').style.color = 'red';
         	    document.getElementById('user_search_message').innerHTML = resp['message'];
             }
-            }else if (this.status == 500){
+          }else if (this.status == 400){
               console.log("Something went wrong!")
               document.getElementById('user_search_message').style.color = 'red';
         			document.getElementById('user_search_message').innerHTML = "Requested user not found!";
@@ -561,7 +569,7 @@ fillUserDetails = function(){  /////////DONE
           }else{
             console.log("Something went wrong")
           }
-        }else if (this.status == 500){
+        }else if (this.status == 400){
           console.log("Something went wrong!")
         }
       }
@@ -624,7 +632,7 @@ postMessage = function(){    //////////DONE
             else{
               console.log("Something went wrong!")
             }
-          }else if (this.status == 500){
+          }else if (this.status == 400){
             console.log("Something went wrong!")
           }
         }
@@ -671,7 +679,7 @@ displayPosts = function(){  /////////DONE
             console.log("Something went wrong!")
           }
         }
-      }else if (this.status == 500){
+      }else if (this.status == 400){
         console.log("Something went wrong!")
       }
     };
@@ -741,7 +749,7 @@ postMessageToOthers = function(){  ///////DONE
               else{
                 console.log("Something went wrong!")
               }
-          }else if (this.status == 500){
+          }else if (this.status == 400){
             console.log("Something went wrong!")
           }
         }
@@ -786,7 +794,7 @@ displayPostsOthers = function(){   //////////DONE
           }else{
             console.log("Something went wrong")
           }
-        }else if (this.status == 500){
+        }else if (this.status == 400){
           console.log("Something went wrong!")
         }
       }
@@ -852,7 +860,7 @@ fillUserDetailsOthers = function(){   //////DONE
           }else{
             console.log("Something went wrong")
           }
-        }else if (this.status == 500){
+        }else if (this.status == 400){
           console.log("Something went wrong!")
         }
       }

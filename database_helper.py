@@ -115,10 +115,18 @@ def sign_out(token):
 
 
 def change_password(token, oldpassword, newpassword):
+    try:
+        newpassword = newpassword.decode("utf-8")
+    except:
+        pass
     token_exists = get_db().execute('select count(*) from loggedinusers where token like ?', [token]).fetchall()
     if token_exists[0][0] > 0:
         user_email = get_db().execute('select email from loggedinusers where token like ?', [token]).fetchall()[0][0]
         oldpassword_db = get_db().execute('select password from users where email like ?', [user_email]).fetchall()[0][0]
+        try:
+            oldpassword_db = oldpassword_db.decode("utf-8")
+        except:
+            pass
         if oldpassword == oldpassword_db:
             try:
                 get_db().execute('update users '

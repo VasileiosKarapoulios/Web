@@ -3,11 +3,14 @@ import database_helper
 import json
 import random
 import string
+import sys
 from gevent.pywsgi import WSGIServer
 from geventwebsocket.handler import WebSocketHandler
 from flask_bcrypt import Bcrypt
 import os
 from werkzeug import secure_filename
+
+sys.path.append(os.path.join(os.path.dirname(__file__)))
 
 app = Flask(__name__)
 bcrypt = Bcrypt(app)
@@ -124,7 +127,8 @@ def check_old_password(email=None, password=None):
     if email and password and find_user(email):
         user_password = find_user(email).get_json()[0]['password']
         if bcrypt.check_password_hash(user_password, password):
-            result = database_helper.check_old_password(email, user_password)
+            #result = database_helper.check_old_password(email, user_password)
+            result = True
             if result:
                 return json.dumps({"success": "true", "message": "Password matching!"}), 200
             else:
@@ -181,6 +185,7 @@ def change_password():
             new_pw_hashed = bcrypt.generate_password_hash(data['newpassword'])
             if bcrypt.check_password_hash(user['password'], data['oldpassword']):
                 result = database_helper.change_password(token, user['password'], new_pw_hashed)
+                print(result)
                 if result:
                     return json.dumps({"success": "true", "message": "Password changed!"}), 200
                 else:
@@ -200,7 +205,7 @@ def get_user_data_by_token():
             return json.dumps({"success": "true", "message": "Requested user found!", "data": result[:]}), 200
 
         else:
-            return json.dumps({"success": "false", "message": "Something went wrong!"}), 500
+            return json.dumps({"success": "false", "message": "Something went wrong!"}), 400
 
 
 @app.route('/users/get_user_data_by_email/<email>', methods=['GET'])
@@ -211,7 +216,7 @@ def get_user_data_by_email(email=None):
         if result:
             return json.dumps({"success": "true", "message": "Requested user found!", "data": result[:]}), 200
         else:
-            return json.dumps({"success": "false", "message": "Something went wrong!"}), 500
+            return json.dumps({"success": "false", "message": "Something went wrong!"}), 400
 
 
 @app.route('/users/get_user_messages_by_token/', methods=['GET'])
@@ -222,7 +227,7 @@ def get_user_messages_by_token():
         if result:
             return json.dumps({"success": "true", "message": "Requested wall found!", "data": result[:]}), 200
         else:
-            return json.dumps({"success": "false", "message": "Something went wrong!"}), 500
+            return json.dumps({"success": "false", "message": "Something went wrong!"}), 400
 
 
 @app.route('/users/get_user_messages_by_email/<email>', methods=['GET'])
@@ -233,7 +238,7 @@ def get_user_messages_by_email(email=None):
         if result:
             return json.dumps({"success": "true", "message": "Requested wall found!", "data": result[:]}), 200
         else:
-            return json.dumps({"success": "false", "message": "Something went wrong!"}), 500
+            return json.dumps({"success": "false", "message": "Something went wrong!"}), 400
 
 
 @app.route('/users/post_message/', methods=['POST'])
@@ -279,7 +284,8 @@ def after_request(exception):
 
 
 if __name__ == '__main__':
-    print("Server: http://127.0.0.1:5000/")
+    # print("Server: http://127.0.0.1:5000/")
     http_server = WSGIServer(('127.0.0.1', 5000), app, handler_class=WebSocketHandler)
+    #http_server = WSGIServer(('', int(os.environ.get('PORT'))), app, handler_class=WebSocketHandler)
     http_server.serve_forever()
     # app.run()
